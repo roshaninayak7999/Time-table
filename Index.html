@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart School Time Table</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+header {
+  background: linear-gradient(135deg,#4338ca,#7c3aed);
+  color: white;
+  padding: 25px 15px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 25px auto;
+  padding: 15px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px #00000010;
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin-bottom: 15px;
+  color: #4338ca;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+  gap: 12px;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+}
+
+button {
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  background: #4f46e5;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: .85;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.green {
+  background: #059669;
+}
+
+.orange {
+  background: #ea580c;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+th, td {
+  border: 1px solid #e2e8f0;
+  padding: 13px;
+  text-align: center;
+}
+
+th {
+  background: #4338ca;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.delete {
+  background: #dc2626;
+  padding: 7px 10px;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+
+@media print {
+  .form-card, .actions, .delete, footer {
+    display: none !important;
+  }
+  body { background: white; }
+  .card { box-shadow: none; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏫 Smart School Time Table</h1>
+  <p>Manage Your School Daily Schedule</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h2>📚 School Information</h2>
+  <div class="form">
+    <input id="school" placeholder="School Name">
+    <input id="className" placeholder="Class (e.g. 10th)">
+    <input id="section" placeholder="Section (e.g. A)">
+  </div>
+</div>
+
+<div class="card form-card">
+  <h2>➕ Add New Period</h2>
+
+  <div class="form">
+    <select id="day">
+      <option>Monday</option>
+      <option>Tuesday</option>
+      <option>Wednesday</option>
+      <option>Thursday</option>
+      <option>Friday</option>
+      <option>Saturday</option>
+    </select>
+
+    <input id="time" placeholder="Time (9:00 - 10:00)">
+    <input id="subject" placeholder="Subject">
+    <input id="teacher" placeholder="Teacher Name">
+
+    <button onclick="addPeriod()">Add Period</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📅 Weekly Time Table</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Subject</th>
+          <th>Teacher</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="actions">
+    <button class="green" onclick="window.print()">🖨 Print Time Table</button>
+    <button class="orange" onclick="clearAll()">Clear All</button>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  © 2026 Smart School Time Table | Made with ❤️
+</footer>
+
+<script>
+let periods = [];
+
+const days = [
+  "Monday","Tuesday","Wednesday",
+  "Thursday","Friday","Saturday"
+];
+
+function addPeriod() {
+  const day = document.getElementById("day").value;
+  const time = document.getElementById("time").value.trim();
+  const subject = document.getElementById("subject").value.trim();
+  const teacher = document.getElementById("teacher").value.trim();
+
+  if(!time || !subject || !teacher) {
+    alert("Please fill all fields!");
+    return;
+  }
+
+  periods.push({day,time,subject,teacher});
+  renderTable();
+
+  document.getElementById("time").value = "";
+  document.getElementById("subject").value = "";
+  document.getElementById("teacher").value = "";
+}
+
+function renderTable() {
+  const body = document.getElementById("tableBody");
+  body.innerHTML = "";
+
+  days.forEach(day => {
+    const dayPeriods = periods.filter(p => p.day === day);
+
+    if(dayPeriods.length === 0) {
+      body.innerHTML += `
+        <tr>
+          <td>${day}</td>
+          <td colspan="4">No Period Added</td>
+        </tr>`;
+    }
+
+    dayPeriods.forEach((p) => {
+      const index = periods.indexOf(p);
+
+      body.innerHTML += `
+        <tr>
+          <td>${p.day}</td>
+          <td>${escapeHTML(p.time)}</td>
+          <td>${escapeHTML(p.subject)}</td>
+          <td>${escapeHTML(p.teacher)}</td>
+          <td>
+            <button class="delete" onclick="deletePeriod(${index})">
+              Delete
+            </button>
+          </td>
+        </tr>`;
+    });
+  });
+}
+
+function escapeHTML(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+function deletePeriod(index) {
+  periods.splice(index,1);
+  renderTable();
+}
+
+function clearAll() {
+  if(confirm("Are you sure you want to clear the timetable?")) {
+    periods = [];
+    renderTable();
+  }
+}
+
+renderTable();
+</script>
+
+</body>
+  </html>
+  
